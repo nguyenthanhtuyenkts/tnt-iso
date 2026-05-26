@@ -329,47 +329,6 @@
       b)
     s))
 ;;; ====================================================================================================
-;;; [4] DANH SÁCH SHORTCUTS LAYER - TOOL 3
-;;; ====================================================================================================
-(defun TNT:LAYER:INIT-SHORTCUTS (/)
-  (setq *TNT.LAYER:SHORTCUTS*
-    '(
-      ;; ARCHITECT
-      ("NDR"   "....01_TNT_A_DRAWING")
-      ("NVI"   "....02_TNT_A_VIRTURAL")
-      ("NTH"   "....03_TNT_A_THIN")
-      ("NHI"   "....04_TNT_A_HIDDEN")
-      ("NSE"  "....05_TNT_A_SECTION")
-      ("NSEL"  "....06_TNT_A_SECTION-LINE")
-      ("NBA"   "....07_TNT_A_BASE")
-      ("NDE"   "....08_TNT_A_DETAIL")
-      ("NCOM"   "....09_TNT_A_COMPLETE")
-      ("NCOT"   "....10_TNT_A_COTE")
-      ("NPL"   "....11_TNT_A_PLOT")
-      ;; FURNITURE
-      ("NFU"   "....12_TNT_F_FURNITURE")
-      ("NTR"   "....13_TNT_F_TREE")
-      ("NGL"   "....14_TNT_F_GLASS")
-      ("NDO"   "....15_TNT_F_DOOR")
-      ;; STRUCTURE
-      ("NCON"   "....16_TNT_S_CONCRETE")
-      ("NWA"   "....17_TNT_S_WALL")
-      ;; ANNOTATE
-      ("NTE"   "....20_TNT_N_TEXT")
-      ("NLE"   "....21_TNT_N_LEADER")
-      ("NDI"   "....22_TNT_N_DIMENSION")
-      ("NHA"   "....23_TNT_N_HATCH")
-      ("NAN"   "....24_TNT_N_ANNOTATE")
-      ;; MECHANICAL
-      ;; ELECTRICAL
-      ;; PLUMBING
-      ;; FIREFIGHTING
-    )
-  )
-  (princ)
-)
-
-;;; ====================================================================================================
 ;;; END SOURCE: B_TNT_Settings_Create_Layer.lsp
 ;;; ====================================================================================================
 
@@ -401,6 +360,17 @@
 ;;; ====================================================================================================
 (defun TNT_SYSTEM_CREATE ()
   (TNT:SYS:RUN-SAFE (function TNT:SYSTEM:CREATE_VARIABLES))
+  (princ)
+)
+
+(defun TNT_SETTING_ALL (/)
+  (TNT_SYSTEM_CREATE)
+  (TNT:SYS:LOG "DONE: TNT_SETTING_ALL.")
+  (princ)
+)
+
+(defun c:TNT_SETTING_ALL (/)
+  (TNT_SETTING_ALL)
   (princ)
 )
 ;;; ====================================================================================================
@@ -488,6 +458,127 @@
     (princ "\n[TNT] DONE: CANCEL CHANGE SYSTEM NAVVCUBE LAYOUT.")
   )
 )
+
+;;; ----------------------------------------------------------------------------------------------------
+;;; LEADER DEFAULT LAYER
+;;; ----------------------------------------------------------------------------------------------------
+(defun TNT:SYSTEM:LEADER-LAYER (/)
+  "....21_TNT_N_LEADER"
+)
+
+(defun TNT:SYSTEM:NORMALIZE-COMMAND (CMD / NAME)
+  (setq NAME (strcase (vl-princ-to-string CMD)))
+  (while
+    (and
+      (> (strlen NAME) 0)
+      (member (substr NAME 1 1) '("." "_" "-"))
+    )
+    (setq NAME (substr NAME 2))
+  )
+  NAME
+)
+
+(defun TNT:SYSTEM:LEADER-COMMAND? (CMD / NAME)
+  (setq NAME (TNT:SYSTEM:NORMALIZE-COMMAND CMD))
+  (if (member NAME '("LEADER" "QLEADER" "MLEADER"))
+    T
+    nil
+  )
+)
+
+(defun TNT:SYSTEM:ENSURE-LAYER (LAYERNAME /)
+  (cond
+    ((tblsearch "LAYER" LAYERNAME) T)
+    ((member "TNT:LAY:CREATE" (atoms-family 1))
+      (TNT:LAY:CREATE)
+      (if (tblsearch "LAYER" LAYERNAME) T nil)
+    )
+    (T nil)
+  )
+)
+
+(defun TNT:SYSTEM:SET-LEADER-LAYER (/ LAYERNAME)
+  (setq LAYERNAME (TNT:SYSTEM:LEADER-LAYER))
+  (if (TNT:SYSTEM:ENSURE-LAYER LAYERNAME)
+    (setvar "CLAYER" LAYERNAME)
+    (TNT:SYS:LOG (strcat "ERROR: STANDARD LEADER LAYER NOT FOUND: " LAYERNAME))
+  )
+  (princ)
+)
+
+(defun TNT:SYSTEM:LEADER-COMMAND-START (REACTOR DATA / CMD)
+  (setq CMD (car DATA))
+  (if (TNT:SYSTEM:LEADER-COMMAND? CMD)
+    (TNT:SYSTEM:SET-LEADER-LAYER)
+  )
+  (princ)
+)
+
+(defun TNT:SYSTEM:LEADER-REACTOR-INIT (/)
+  (if (and (boundp '*TNT.SYSTEM.LEADER.REACTOR*) *TNT.SYSTEM.LEADER.REACTOR*)
+    (vl-catch-all-apply 'vlr-remove (list *TNT.SYSTEM.LEADER.REACTOR*))
+  )
+  (setq *TNT.SYSTEM.LEADER.REACTOR*
+    (vlr-command-reactor
+      nil
+      '((:vlr-commandWillStart . TNT:SYSTEM:LEADER-COMMAND-START))
+    )
+  )
+  (princ)
+)
+
+;;; ----------------------------------------------------------------------------------------------------
+;;; STARTUP PALETTE SUPPRESS
+;;; ----------------------------------------------------------------------------------------------------
+(defun TNT:SYSTEM:STARTUP-PALETTE-COMMAND? (CMD / NAME)
+  (setq NAME (TNT:SYSTEM:NORMALIZE-COMMAND CMD))
+  (if
+    (member
+      NAME
+      '(
+        "TOOLPALETTES"
+        "AECPROJECTPALETTESTARTUP"
+        "PROJECTPALETTESTARTUP"
+        "AECPROJECTNAVIGATORSTARTUP"
+        "PROJECTNAVIGATORSTARTUP"
+      )
+    )
+    T
+    nil
+  )
+)
+
+(defun TNT:SYSTEM:CLOSE-STARTUP-PALETTES (/ OLDCE)
+  (setq OLDCE (getvar "CMDECHO"))
+  (setvar "CMDECHO" 0)
+  (vl-catch-all-apply 'vl-cmdf (list "_.TOOLPALETTESCLOSE"))
+  (vl-catch-all-apply 'vl-cmdf (list "_.AECCLOSEPROJECTNAVIGATOR"))
+  (vl-catch-all-apply 'vl-cmdf (list "_.CLOSEPROJECTNAVIGATOR"))
+  (setvar "CMDECHO" OLDCE)
+  (princ)
+)
+
+(defun TNT:SYSTEM:STARTUP-PALETTE-COMMAND-END (REACTOR DATA / CMD)
+  (setq CMD (car DATA))
+  (if (TNT:SYSTEM:STARTUP-PALETTE-COMMAND? CMD)
+    (TNT:SYSTEM:CLOSE-STARTUP-PALETTES)
+  )
+  (princ)
+)
+
+(defun TNT:SYSTEM:STARTUP-PALETTE-REACTOR-INIT (/)
+  (if (and (boundp '*TNT.SYSTEM.STARTUP.PALETTE.REACTOR*) *TNT.SYSTEM.STARTUP.PALETTE.REACTOR*)
+    (vl-catch-all-apply 'vlr-remove (list *TNT.SYSTEM.STARTUP.PALETTE.REACTOR*))
+  )
+  (setq *TNT.SYSTEM.STARTUP.PALETTE.REACTOR*
+    (vlr-command-reactor
+      nil
+      '((:vlr-commandEnded . TNT:SYSTEM:STARTUP-PALETTE-COMMAND-END))
+    )
+  )
+  (TNT:SYSTEM:CLOSE-STARTUP-PALETTES)
+  (princ)
+)
 ;;; ====================================================================================================
 ;;; END SOURCE: L_TNT_Function_Create_System.lsp
 ;;; ====================================================================================================
@@ -495,6 +586,7 @@
 ;;; ----------------------------------------------------------------------------------------------------
 ;;; End
 ;;; ----------------------------------------------------------------------------------------------------
-(TNT:LAYER:INIT-SHORTCUTS)
+(TNT:SYSTEM:LEADER-REACTOR-INIT)
+(TNT:SYSTEM:STARTUP-PALETTE-REACTOR-INIT)
 (TNT:SYS:LOG "TNT system settings loaded. No package autoload was executed.")
 (princ)

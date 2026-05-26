@@ -12,7 +12,7 @@
 (vl-load-com)
 (setvar "MODEMACRO" "TNT Architecture")
 -------------------------------------------------------------------------------------------------------------------
-(defun c:TNT ( / scale ss lstInsert lstLine lstLwpolyline lstCircle lstLeader lstDim lstText )
+(defun c:TNT ( / scale ss lstInsert lstLine lstLwpolyline lstCircle lstLeader lstMLeader lstDim lstText blockName )
   (command "UNDO" "BE")
   (setvar "CMDECHO" 0)
   (setq scale (TNT:GetScaleFromFrame))
@@ -25,30 +25,56 @@
     )
     ;; nếu chọn đúng thì tiếp tục xử lý
     (progn
-      (setq ss (ssget (list (cons 0 "INSERT,LINE,LWPOLYLINE,CIRCLE,LEADER,*TEXT,DIMENSION"))))
+      (setq ss (ssget (list (cons 0 "INSERT,LINE,LWPOLYLINE,CIRCLE,LEADER,MULTILEADER,*TEXT,DIMENSION"))))
       (setq lstInsert     (TNT:FilterEntitiesByType ss "INSERT"))
       (setq lstLine       (TNT:FilterEntitiesByType ss "LINE"))
       (setq lstLwpolyline (TNT:FilterEntitiesByType ss "LWPOLYLINE"))
       (setq lstCircle     (TNT:FilterEntitiesByType ss "CIRCLE"))
       (setq lstLeader     (TNT:FilterEntitiesByType ss "LEADER"))
+      (setq lstMLeader    (TNT:FilterEntitiesByType ss "MULTILEADER"))
       (setq lstDim        (TNT:FilterEntitiesByType ss "DIMENSION"))
       (setq lstText       (vl-remove-if-not (function (lambda (x) (wcmatch (cdr (assoc 0 (entget x))) "*TEXT"))) (TNT:GENERAL:SS-TO-LIST ss nil)))
 
       ;; Block theo tên
-      (TNT:ScaleBlocks (TNT:FilterBlocksByName lstInsert "TNT_BASE")    scale)
-      (TNT:ScaleBlocks (TNT:FilterBlocksByName lstInsert "TNT_SECTION") scale)
-      (TNT:ScaleBlocks (TNT:FilterBlocksByName lstInsert "TNT_NOTE_1")  scale)
-      (TNT:ScaleBlocks (TNT:FilterBlocksByName lstInsert "TNT_NOTE_2")  scale)
-      (TNT:ScaleBlocks (TNT:FilterBlocksByName lstInsert "TNT_NOTE_3")  scale)
-      (TNT:ScaleBlocks (TNT:FilterBlocksByName lstInsert "TNT_SLOPE")   scale)
-      (TNT:ScaleBlocks (TNT:FilterBlocksByName lstInsert "TNT_DOOR_1")  scale)
-      (TNT:ScaleBlocks (TNT:FilterBlocksByName lstInsert "TNT_DOOR_2")  scale)
-      (TNT:ScaleBlocks (TNT:FilterBlocksByName lstInsert "TNT_COTE")    scale)
+      (foreach blockName
+        '(
+          ".TNT_A_ANNO-TAG-BASE-01"
+          ".TNT_ANNO-TAG-ANN-01"
+          ".TNT_ANNO-TAG-ANN-02"
+          ".TNT_ANNO-TAG-ANN-03"
+          ".TNT_ANNO-TAG-ANN-04"
+          ".TNT_ANNO-TAG-ANN-05"
+          ".TNT_ANNO-TAG-ANN-06"
+          ".TNT_ANNO-TAG-COT-01"
+          ".TNT_ANNO-TAG-COT-02"
+          ".TNT_ANNO-TAG-COT-03"
+          ".TNT_ANNO-TAG-COT-04"
+          ".TNT_ANNO-TAG-COT-05"
+          ".TNT_ANNO-TAG-COT-06"
+          ".TNT_ANNO-TAG-COT-07"
+          ".TNT_ANNO-TAG-COT-08"
+          ".TNT_ANNO-TAG-COT-09"
+          ".TNT_ANNO-TAG-DOOR-01"
+          ".TNT_ANNO-TAG-DOOR-02"
+          ".TNT_ANNO-TAG-OTHER-01"
+          ".TNT_ANNO-TAG-ROOM-01"
+          ".TNT_ANNO-TAG-ROOM-2"
+          ".TNT_ANNO-TAG-SEC-01"
+          ".TNT_ANNO-TAG-SEC-02"
+          ".TNT_ANNO-TAG-SEC-03"
+          ".TNT_ANNO-TAG-SLOPE-01"
+          ".TNT_ANNO-TAG-VIEW-01"
+          ".TNT_ANNO-TAG-VIEW-02"
+          ".TNT_BASE"
+        )
+        (TNT:ScaleBlocks (TNT:FilterBlocksByName lstInsert blockName) scale)
+      )
       ;; Các đối tượng còn lại
       (TNT:ScaleCircle      lstCircle       scale)
       (TNT:ScaleLines       lstLine         scale)
       (TNT:ScaleLines       lstLwpolyline   scale)
       (TNT:ScaleLeader      lstLeader       scale)
+      (TNT:ScaleMLeader     lstMLeader      scale)
       (TNT:ScaleDimension   lstDim          scale)
       (TNT:ScaleText        lstText         scale)
 
@@ -187,6 +213,27 @@
   )
 )
 -------------------------------------------------------------------------------------------------------------------
+(defun TNT:GENERAL:SAFE-PUT (obj prop value / err)
+  (if (and obj (vlax-property-available-p obj prop T))
+    (progn
+      (setq err (vl-catch-all-apply 'vlax-put-property (list obj prop value)))
+      (if (vl-catch-all-error-p err) nil T)
+    )
+    nil
+  )
+)
+-------------------------------------------------------------------------------------------------------------------
+(defun TNT:ScaleMLeader (lstMLeader scale / ent obj size)
+  (foreach ent lstMLeader
+    (setq obj (vlax-ename->vla-object ent)
+          size (* 2 scale)
+    )
+    (TNT:GENERAL:SAFE-PUT obj 'ScaleFactor 1)
+    (TNT:GENERAL:SAFE-PUT obj 'ArrowheadSize size)
+    (vla-Update obj)
+  )
+)
+-------------------------------------------------------------------------------------------------------------------
 (defun TNT:ScaleDimension (lstDim scale / ent obj)
   (setvar "DIMSCALE" scale)
   (foreach ent lstDim
@@ -208,9 +255,6 @@
       ((= style ".TNT_A_TXT_1_MAIN")  (vla-put-Height obj h1))
       ((= style ".TNT_A_TXT_2_SUB")   (vla-put-Height obj h2))
       ((= style ".TNT_A_TXT_3_NOTE")  (vla-put-Height obj h3))
-      ((= style "01_TNT_CHUCNANG")    (vla-put-Height obj h1))      
-      ((= style "02_TNT_GHICHU")      (vla-put-Height obj h2))      
-      ((= style "02_TNT_Text")        (vla-put-Height obj h3))      
     )
     (vla-Update obj)
   )

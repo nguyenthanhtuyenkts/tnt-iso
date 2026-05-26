@@ -1,0 +1,75 @@
+Cách chuẩn nhất: dùng Git để quản lý mã nguồn local, rồi đẩy lên GitHub/GitLab/Bitbucket. Máy khác chỉ cần clone về, sửa, commit, push/pull là đồng bộ.
+
+1. Cài Git
+Tải Git for Windows, cài xong kiểm tra:
+
+git --version
+Cấu hình tên/email một lần:
+
+git config --global user.name "Ten cua may"
+git config --global user.email "email@example.com"
+2. Tạo repository online
+Ví dụ dùng GitHub:
+
+Vào GitHub.
+Tạo repo mới, ví dụ: tnt-iso-lisp.
+Chọn Private nếu không muốn công khai.
+Không cần tạo README nếu thư mục local đã có code.
+3. Khởi tạo Git trong thư mục Lisp
+Vào đúng thư mục đang làm:
+
+cd "E:\TNT\0.TNT ISO\00.TNT ISO 2026\00_LISP"
+git init
+Tạo file .gitignore nếu cần. Với Lisp thì có thể để đơn giản:
+
+*.bak
+*.tmp
+*.log
+*.dcl
+Sau đó add và commit:
+
+git add .
+git commit -m "Initial TNT Lisp packages"
+4. Kết nối với repo online
+Ví dụ repo GitHub của mày là:
+
+https://github.com/username/tnt-iso-lisp.git
+Chạy:
+
+git branch -M main
+git remote add origin https://github.com/username/tnt-iso-lisp.git
+git push -u origin main
+5. Làm việc trên máy khác
+Trên máy khác, clone repo về:
+
+git clone https://github.com/username/tnt-iso-lisp.git
+Khi bắt đầu sửa trên máy nào thì luôn kéo bản mới trước:
+
+git pull
+Sau khi sửa xong:
+
+git add .
+git commit -m "Mo ta thay doi"
+git push
+Quy trình hằng ngày
+Trên máy A:
+
+git pull
+# sửa file
+git add .
+git commit -m "Sua package layer"
+git push
+Trên máy B:
+
+git pull
+# sửa tiếp
+git add .
+git commit -m "Sua package hatch"
+git push
+Điểm quan trọng: trước khi sửa ở máy nào, luôn git pull. Sau khi sửa xong, luôn git commit rồi git push.
+
+Lưu ý cho thư mục của mày
+Nếu chỉ muốn đồng bộ Lisp, nên đặt Git repo ở:
+
+E:\TNT\0.TNT ISO\00.TNT ISO 2026\00_LISP
+Không nên đưa toàn bộ E:\TNT\0.TNT ISO lên Git nếu trong đó có DWG, template nặng, file rác, backup, hoặc dữ liệu không liên quan. Git phù hợp nhất với mã nguồn .lsp, .dcl, .txt, tài liệu nhỏ.
