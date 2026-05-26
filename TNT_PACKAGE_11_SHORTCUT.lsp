@@ -19,21 +19,21 @@
 (defun TNT:SHORTCUT:LAYER:TABLE (/)
   '(
     ;; ==================== ARCHITECT ====================
-    ("ARCHITECT" "NDR"  "....01_TNT_A_DRAWING"       "Drawing / khung ban ve")
-    ("ARCHITECT" "NVI"  "....02_TNT_A_VIRTURAL"      "Visible line / net thay")
-    ("ARCHITECT" "NTH"  "....03_TNT_A_THIN"          "Thin line / net manh")
-    ("ARCHITECT" "NHI"  "....04_TNT_A_HIDDEN"        "Hidden line / net khuat")
-    ("ARCHITECT" "NSE"  "....05_TNT_A_SECTION"       "Section / net cat")
-    ("ARCHITECT" "NSEL" "....06_TNT_A_SECTION-LINE"  "Section line / truc cat")
-    ("ARCHITECT" "NBA"  "....07_TNT_A_BASE"          "Base axis / net truc")
+    ("ARCHITECT" "NKH"  "....01_TNT_A_DRAWING"       "Drawing / khung ban ve")
+    ("ARCHITECT" "NT"   "....02_TNT_A_VIRTURAL"      "Visible line / net thay")
+    ("ARCHITECT" "NM"   "....03_TNT_A_THIN"          "Thin line / net manh")
+    ("ARCHITECT" "NK"   "....04_TNT_A_HIDDEN"        "Hidden line / net khuat")
+    ("ARCHITECT" "NC"   "....05_TNT_A_SECTION"       "Section / net cat")
+    ("ARCHITECT" "NSL"  "....06_TNT_A_SECTION-LINE"  "Section line / truc cat")
+    ("ARCHITECT" "NTR"  "....07_TNT_A_BASE"          "Base axis / net truc")
     ("ARCHITECT" "NDE"  "....08_TNT_A_DETAIL"        "Detail line / net chi tiet")
     ("ARCHITECT" "NCOM" "....09_TNT_A_COMPLETE"      "Complete line / net hoan thien")
     ("ARCHITECT" "NCOT" "....10_TNT_A_COTE"          "Cote / cao do")
     ("ARCHITECT" "NPL"  "....11_TNT_A_PLOT"          "Plot / net in")
 
     ;; ==================== FURNITURE ====================
-    ("FURNITURE" "NFU"  "....12_TNT_F_FURNITURE"     "Furniture / noi that")
-    ("FURNITURE" "NTR"  "....13_TNT_F_TREE"          "Tree / cay")
+    ("FURNITURE" "NNT"  "....12_TNT_F_FURNITURE"     "Furniture / noi that")
+    ("FURNITURE" "NCC"  "....13_TNT_F_TREE"          "Tree / cay")
     ("FURNITURE" "NGL"  "....14_TNT_F_GLASS"         "Glass / kinh")
     ("FURNITURE" "NDO"  "....15_TNT_F_DOOR"          "Door / cua")
 
